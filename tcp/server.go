@@ -97,6 +97,10 @@ func (impl *serverImpl) WriteCh() chan *inter.ServerData {
 	return impl.writeCh
 }
 
+func (impl *serverImpl) Wait() {
+	impl.wg.Wait()
+}
+
 func (impl *serverImpl) CloseAndWait() {
 	impl.ctxCancel()
 	_ = impl.listener.Close()

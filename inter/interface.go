@@ -17,6 +17,7 @@ type Client interface {
 	ReadCh() chan []byte
 	WriteCh() chan []byte
 
+	Wait()
 	CloseAndWait()
 }
 
@@ -48,6 +49,7 @@ type Server interface {
 	ReadCh() chan *ServerData
 	WriteCh() chan *ServerData
 
+	Wait()
 	CloseAndWait()
 }
 

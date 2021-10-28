@@ -66,6 +66,10 @@ type clientImpl struct {
 	writeCh chan []byte
 }
 
+func (impl *clientImpl) Wait() {
+	impl.wg.Wait()
+}
+
 func (impl *clientImpl) Context() context.Context {
 	return impl.ctx
 }

@@ -76,6 +76,10 @@ type serverImpl struct {
 	cliMap map[string]net.UDPAddr
 }
 
+func (impl *serverImpl) Wait() {
+	impl.wg.Wait()
+}
+
 func (impl *serverImpl) Context() context.Context {
 	return impl.ctx
 }

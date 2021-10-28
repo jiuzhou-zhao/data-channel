@@ -51,6 +51,11 @@ func (impl *clientImpl) WriteCh() chan []byte {
 	return impl.writeCh
 }
 
+func (impl *clientImpl) Wait() {
+	impl.client.Wait()
+	impl.wg.Wait()
+}
+
 func (impl *clientImpl) CloseAndWait() {
 	impl.client.CloseAndWait()
 	impl.wg.Wait()
