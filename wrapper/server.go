@@ -63,8 +63,8 @@ func (impl *serverImpl) WriteCh() chan *inter.ServerData {
 }
 
 func (impl *serverImpl) Wait() {
-	impl.server.Wait()
 	impl.wg.Wait()
+	impl.server.CloseAndWait()
 }
 
 func (impl *serverImpl) CloseAndWait() {
