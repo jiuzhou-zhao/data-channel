@@ -141,6 +141,8 @@ func (impl *serverImpl) procRoutine() {
 			log.Infof("close client: %s", cli.RemoteAddr().String())
 			delete(impl.cliMap, cli.RemoteAddr().String())
 		case d := <-impl.writeCh:
+			log.Debugf("write %d to %s", len(d.Data), d.Addr)
+
 			if cli, ok := impl.cliMap[d.Addr]; ok {
 				n, err := cli.Write(d.Data)
 				if err != nil {
