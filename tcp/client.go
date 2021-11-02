@@ -27,16 +27,6 @@ func NewClient(ctx context.Context, address string, statusOb inter.ClientStatusO
 		log = logger.NewWrapper(&logger.NopLogger{}).WithFields(logger.FieldString("role", "tcp_client"))
 	}
 
-	tcpAddr, err := net.ResolveTCPAddr("tcp", address)
-	if err != nil {
-		return
-	}
-
-	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	if err != nil {
-		return
-	}
-
 	ctx, cancel := context.WithCancel(ctx)
 
 	impl := &clientImpl{
@@ -45,7 +35,8 @@ func NewClient(ctx context.Context, address string, statusOb inter.ClientStatusO
 		address:     address,
 		statusOb:    statusOb,
 		log:         log,
-		conn:        conn,
+		connOpened:  false,
+		conn:        nil,
 		readCh:      make(chan []byte, clientBufferCount),
 		writeCh:     make(chan []byte, clientBufferCount),
 		connectedCh: make(chan interface{}, clientBufferCount),

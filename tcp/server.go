@@ -189,7 +189,8 @@ func (impl *serverImpl) acceptRoutine() {
 func (impl *serverImpl) readRoutine(conn net.Conn) {
 	defer impl.wg.Done()
 
-	log := impl.log.WithFields(logger.FieldString("role", "tcp_server_proc_reader"))
+	log := impl.log.WithFields(logger.FieldString("role", "tcp_server_proc_reader"),
+		logger.FieldString("addr", conn.RemoteAddr().String()))
 	log.Info("enter")
 	defer log.Info("leave")
 
