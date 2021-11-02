@@ -132,13 +132,13 @@ func (impl *serverImpl) procRoutine() {
 
 			continue
 		case cli := <-impl.acceptCh:
-			log.Infof("accept client: %d", cli.RemoteAddr().String())
+			log.Infof("accept client: %s", cli.RemoteAddr().String())
 			impl.cliMap[cli.RemoteAddr().String()] = cli
 
 			impl.wg.Add(1)
 			go impl.readRoutine(cli)
 		case cli := <-impl.closeCh:
-			log.Infof("close client: %d", cli.RemoteAddr().String())
+			log.Infof("close client: %s", cli.RemoteAddr().String())
 			delete(impl.cliMap, cli.RemoteAddr().String())
 		case d := <-impl.writeCh:
 			if cli, ok := impl.cliMap[d.Addr]; ok {
