@@ -153,6 +153,7 @@ func (impl *clientImpl) procRoutine() {
 			conn, err := impl.dial()
 			if err != nil {
 				impl.statusOb.OnException(err)
+				dialInterval *= 2
 				if dialInterval >= time.Minute {
 					dialInterval = time.Minute
 				}
