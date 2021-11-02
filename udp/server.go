@@ -124,14 +124,16 @@ func (impl *serverImpl) procRoutine() {
 
 			continue
 		case d := <-impl.writeCh:
-			cliAddr := impl.cliMap[d.Addr]
-			_, err := impl.conn.WriteToUDP(d.Data, &cliAddr)
-			if err != nil {
-				log.Errorf("udp server write failed: %v", err)
+			if cliAddr, ok := impl.cliMap[d.Addr]; ok {
+				_, err := impl.conn.WriteToUDP(d.Data, &cliAddr)
+				if err != nil {
+					log.Errorf("udp server write failed: %v", err)
+				}
+			} else {
+				log.Errorf("udp server no address: %s", d.Addr)
 			}
 
 		case di := <-impl.readChInternal:
-
 			if _, ok := impl.cliMap[di.a.String()]; !ok {
 				impl.cliMap[di.a.String()] = *di.a
 				log.Infof("add client %s", di.a.String())

@@ -151,6 +151,8 @@ func (impl *serverImpl) procRoutine() {
 				if n != len(d.Data) {
 					log.Errorf("cli[%s] write: %n/%d", d.Addr, n, len(d.Data))
 				}
+			} else {
+				log.Errorf("try write, no client: %s", d.Addr)
 			}
 		}
 	}
