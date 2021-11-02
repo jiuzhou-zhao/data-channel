@@ -232,9 +232,10 @@ func (impl *clientImpl) readRoutine() {
 
 			if e != nil {
 				log.Errorf("read failed: %v", e)
+				impl.readErrCh <- e
 				impl.statusOb.OnException(e)
 
-				continue
+				break
 			}
 
 			impl.readCh <- buf[:n]
