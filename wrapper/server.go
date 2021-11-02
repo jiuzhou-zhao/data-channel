@@ -110,8 +110,6 @@ func (impl *serverImpl) processReadData(dIn *inter.ServerData) (dOut *inter.Serv
 }
 
 func (impl *serverImpl) processWriteData(dIn *inter.ServerData) (dOut *inter.ServerData, err error) {
-	impl.log.Infof("write %d from %s", len(dIn.Data), dIn.Addr)
-
 	dOut = dIn
 	for _, processor := range impl.processors {
 		dOut, err = processor.OnWrite(dOut)
@@ -121,6 +119,10 @@ func (impl *serverImpl) processWriteData(dIn *inter.ServerData) (dOut *inter.Ser
 		if dOut == nil {
 			break
 		}
+	}
+
+	if dOut != nil {
+		impl.log.Infof("write %d from %s", len(dIn.Data), dIn.Addr)
 	}
 
 	return

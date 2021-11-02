@@ -86,8 +86,6 @@ func (impl *clientImpl) processReadData(dIn []byte) (dOut []byte, err error) {
 }
 
 func (impl *clientImpl) processWriteData(dIn []byte) (dOut []byte, err error) {
-	impl.log.Infof("write %d", len(dIn))
-
 	dOut = dIn
 	for _, processor := range impl.processors {
 		dOut, err = processor.OnWrite(dOut)
@@ -97,6 +95,10 @@ func (impl *clientImpl) processWriteData(dIn []byte) (dOut []byte, err error) {
 		if dOut == nil {
 			break
 		}
+	}
+
+	if dOut != nil {
+		impl.log.Infof("write %d", len(dIn))
 	}
 
 	return
