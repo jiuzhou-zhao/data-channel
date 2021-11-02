@@ -2,17 +2,23 @@ package wrapper
 
 import (
 	"context"
+	"github.com/sgostarter/i/logger"
 	"sync"
 
 	"github.com/jiuzhou-zhao/data-channel/inter"
 )
 
-func NewServer(server inter.Server, processors ...inter.ServerDataProcessor) inter.Server {
+func NewServer(server inter.Server, log logger.Wrapper, processors ...inter.ServerDataProcessor) inter.Server {
 	ob := server.GetOb()
+
+	if log == nil {
+		log = logger.NewWrapper(&logger.NopLogger{}).WithFields(logger.FieldString("role", "udp_server"))
+	}
 
 	impl := &serverImpl{
 		server:     server,
 		ob:         ob,
+		log:        log,
 		processors: processors,
 		readCh:     make(chan *inter.ServerData, 10),
 		writeCh:    make(chan *inter.ServerData, 10),
@@ -33,6 +39,7 @@ type serverImpl struct {
 	server     inter.Server
 	ob         inter.ServerStatusOb
 	processors []inter.ServerDataProcessor
+	log        logger.Wrapper
 
 	readCh  chan *inter.ServerData
 	writeCh chan *inter.ServerData
@@ -86,6 +93,8 @@ func (impl *serverImpl) OnException(addr string, err error) {
 }
 
 func (impl *serverImpl) processReadData(dIn *inter.ServerData) (dOut *inter.ServerData, err error) {
+	impl.log.Infof("read %d from %s", len(dIn.Data), dIn.Addr)
+
 	dOut = dIn
 	for idx := len(impl.processors) - 1; idx >= 0; idx-- {
 		dOut, err = impl.processors[idx].OnRead(dOut)
@@ -101,6 +110,8 @@ func (impl *serverImpl) processReadData(dIn *inter.ServerData) (dOut *inter.Serv
 }
 
 func (impl *serverImpl) processWriteData(dIn *inter.ServerData) (dOut *inter.ServerData, err error) {
+	impl.log.Infof("write %d from %s", len(dIn.Data), dIn.Addr)
+
 	dOut = dIn
 	for _, processor := range impl.processors {
 		dOut, err = processor.OnWrite(dOut)

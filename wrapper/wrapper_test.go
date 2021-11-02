@@ -51,7 +51,7 @@ func TestUDPWrapper(t *testing.T) {
 	rs, err := udp.NewServer(ctx, "127.0.0.1:11111", &serverStatusOb{}, log)
 	assert.Nil(t, err)
 
-	s := NewServer(rs, dataprocessor.NewServerEncryptDataProcess([]byte("1")))
+	s := NewServer(rs, log, dataprocessor.NewServerEncryptDataProcess([]byte("1")))
 
 	var wg sync.WaitGroup
 
@@ -84,7 +84,7 @@ func TestUDPWrapper(t *testing.T) {
 		rc, err := udp.NewClient(ctx, "127.0.0.1:11111", &clientStatusOb{id: start}, log)
 		assert.Nil(t, err)
 
-		c := NewClient(rc, dataprocessor.NewClientEncryptDataProcess([]byte("1")))
+		c := NewClient(rc, log, dataprocessor.NewClientEncryptDataProcess([]byte("1")))
 
 		loop := true
 		for loop {
@@ -120,7 +120,7 @@ func TestTCPWrapper(t *testing.T) {
 	rs, err := tcp.NewServer(ctx, "127.0.0.1:11111", &serverStatusOb{}, log)
 	assert.Nil(t, err)
 
-	s := NewServer(rs, dataprocessor.NewServerTCPBag(), dataprocessor.NewServerEncryptDataProcess([]byte("1")))
+	s := NewServer(rs, log, dataprocessor.NewServerTCPBag(), dataprocessor.NewServerEncryptDataProcess([]byte("1")))
 
 	var wg sync.WaitGroup
 
@@ -153,7 +153,7 @@ func TestTCPWrapper(t *testing.T) {
 		rc, err := tcp.NewClient(ctx, "127.0.0.1:11111", &clientStatusOb{id: start}, log)
 		assert.Nil(t, err)
 
-		c := NewClient(rc, dataprocessor.NewClientTCPBag(), dataprocessor.NewClientEncryptDataProcess([]byte("1")))
+		c := NewClient(rc, log, dataprocessor.NewClientTCPBag(), dataprocessor.NewClientEncryptDataProcess([]byte("1")))
 
 		loop := true
 		for loop {

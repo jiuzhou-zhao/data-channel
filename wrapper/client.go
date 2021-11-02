@@ -2,14 +2,20 @@ package wrapper
 
 import (
 	"context"
+	"github.com/sgostarter/i/logger"
 	"sync"
 
 	"github.com/jiuzhou-zhao/data-channel/inter"
 )
 
-func NewClient(client inter.Client, processors ...inter.ClientDataProcessor) inter.Client {
+func NewClient(client inter.Client, log logger.Wrapper, processors ...inter.ClientDataProcessor) inter.Client {
+	if log == nil {
+		log = logger.NewWrapper(&logger.NopLogger{}).WithFields(logger.FieldString("role", "udp_server"))
+	}
+
 	impl := &clientImpl{
 		client:     client,
+		log:        log,
 		processors: processors,
 		readCh:     make(chan []byte, 10),
 		writeCh:    make(chan []byte, 10),
@@ -26,6 +32,7 @@ type clientImpl struct {
 
 	client     inter.Client
 	processors []inter.ClientDataProcessor
+	log        logger.Wrapper
 
 	readCh  chan []byte
 	writeCh chan []byte
@@ -62,6 +69,8 @@ func (impl *clientImpl) CloseAndWait() {
 }
 
 func (impl *clientImpl) processReadData(dIn []byte) (dOut []byte, err error) {
+	impl.log.Infof("read %d", len(dIn))
+
 	dOut = dIn
 	for idx := len(impl.processors) - 1; idx >= 0; idx-- {
 		dOut, err = impl.processors[idx].OnRead(dOut)
@@ -77,6 +86,8 @@ func (impl *clientImpl) processReadData(dIn []byte) (dOut []byte, err error) {
 }
 
 func (impl *clientImpl) processWriteData(dIn []byte) (dOut []byte, err error) {
+	impl.log.Infof("write %d", len(dIn))
+
 	dOut = dIn
 	for _, processor := range impl.processors {
 		dOut, err = processor.OnWrite(dOut)
