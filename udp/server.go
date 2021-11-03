@@ -47,6 +47,7 @@ func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusO
 	}
 
 	impl.wg.Add(1)
+
 	go impl.procRoutine()
 
 	return impl, nil
@@ -92,6 +93,7 @@ func (impl *serverImpl) SetOb(ob inter.ServerStatusOb) {
 	if ob == nil {
 		ob = &inter.UnimplementedServerStatusOb{}
 	}
+
 	impl.statusOb = ob
 }
 
@@ -113,6 +115,7 @@ func (impl *serverImpl) procRoutine() {
 	log := impl.log.WithFields(logger.FieldString("role", "udp_server_proc"))
 
 	impl.wg.Add(1)
+
 	go impl.readRoutine()
 
 	loop := true

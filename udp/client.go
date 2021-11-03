@@ -2,10 +2,10 @@ package udp
 
 import (
 	"context"
+	"errors"
 	"net"
 	"sync"
 
-	"errors"
 	"github.com/jiuzhou-zhao/data-channel/inter"
 	"github.com/sgostarter/i/logger"
 )
@@ -46,6 +46,7 @@ func NewClient(ctx context.Context, address string, statusOb inter.ClientStatusO
 	}
 
 	impl.wg.Add(1)
+
 	go impl.procRoutine()
 
 	return impl, nil
@@ -82,6 +83,7 @@ func (impl *clientImpl) SetOb(ob inter.ClientStatusOb) {
 	if ob == nil {
 		ob = &inter.UnimplementedClientStatusOb{}
 	}
+
 	impl.statusOb = ob
 }
 
@@ -107,6 +109,7 @@ func (impl *clientImpl) procRoutine() {
 	impl.statusOb.OnConnect()
 
 	impl.wg.Add(1)
+
 	go impl.readRoutine()
 
 	loop := true
@@ -120,6 +123,7 @@ func (impl *clientImpl) procRoutine() {
 			n, e := impl.conn.Write(d)
 			if e != nil {
 				impl.statusOb.OnException(e)
+
 				continue
 			}
 

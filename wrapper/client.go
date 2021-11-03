@@ -2,10 +2,10 @@ package wrapper
 
 import (
 	"context"
-	"github.com/sgostarter/i/logger"
 	"sync"
 
 	"github.com/jiuzhou-zhao/data-channel/inter"
+	"github.com/sgostarter/i/logger"
 )
 
 func NewClient(client inter.Client, log logger.Wrapper, processors ...inter.ClientDataProcessor) inter.Client {
@@ -22,6 +22,7 @@ func NewClient(client inter.Client, log logger.Wrapper, processors ...inter.Clie
 	}
 
 	impl.wg.Add(1)
+
 	go impl.procRoutine()
 
 	return impl
@@ -69,14 +70,13 @@ func (impl *clientImpl) CloseAndWait() {
 }
 
 func (impl *clientImpl) processReadData(dIn []byte) (dOut []byte, err error) {
-	impl.log.Infof("read %d", len(dIn))
-
 	dOut = dIn
 	for idx := len(impl.processors) - 1; idx >= 0; idx-- {
 		dOut, err = impl.processors[idx].OnRead(dOut)
 		if err != nil {
 			break
 		}
+
 		if dOut == nil {
 			break
 		}
@@ -92,13 +92,10 @@ func (impl *clientImpl) processWriteData(dIn []byte) (dOut []byte, err error) {
 		if err != nil {
 			break
 		}
+
 		if dOut == nil {
 			break
 		}
-	}
-
-	if dOut != nil {
-		impl.log.Infof("write %d", len(dIn))
 	}
 
 	return
@@ -118,8 +115,10 @@ func (impl *clientImpl) procRoutine() {
 			d, err := impl.processReadData(d)
 			if err != nil {
 				impl.client.GetOb().OnException(err)
+
 				continue
 			}
+
 			if d != nil {
 				impl.readCh <- d
 			}
@@ -127,6 +126,7 @@ func (impl *clientImpl) procRoutine() {
 			d, err := impl.processWriteData(d)
 			if err != nil {
 				impl.client.GetOb().OnException(err)
+
 				continue
 			}
 

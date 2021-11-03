@@ -2,10 +2,10 @@ package wrapper
 
 import (
 	"context"
-	"github.com/sgostarter/i/logger"
 	"sync"
 
 	"github.com/jiuzhou-zhao/data-channel/inter"
+	"github.com/sgostarter/i/logger"
 )
 
 func NewServer(server inter.Server, log logger.Wrapper, processors ...inter.ServerDataProcessor) inter.Server {
@@ -28,6 +28,7 @@ func NewServer(server inter.Server, log logger.Wrapper, processors ...inter.Serv
 	server.SetOb(impl)
 
 	impl.wg.Add(1)
+
 	go impl.procRoutine()
 
 	return impl
@@ -54,6 +55,7 @@ func (impl *serverImpl) SetOb(ob inter.ServerStatusOb) {
 	if ob == nil {
 		ob = &inter.UnimplementedServerStatusOb{}
 	}
+
 	impl.ob = ob
 }
 
@@ -93,14 +95,13 @@ func (impl *serverImpl) OnException(addr string, err error) {
 }
 
 func (impl *serverImpl) processReadData(dIn *inter.ServerData) (dOut *inter.ServerData, err error) {
-	impl.log.Infof("read %d from %s", len(dIn.Data), dIn.Addr)
-
 	dOut = dIn
 	for idx := len(impl.processors) - 1; idx >= 0; idx-- {
 		dOut, err = impl.processors[idx].OnRead(dOut)
 		if err != nil {
 			break
 		}
+
 		if dOut == nil {
 			break
 		}
@@ -116,13 +117,10 @@ func (impl *serverImpl) processWriteData(dIn *inter.ServerData) (dOut *inter.Ser
 		if err != nil {
 			break
 		}
+
 		if dOut == nil {
 			break
 		}
-	}
-
-	if dOut != nil {
-		impl.log.Infof("write %d from %s", len(dIn.Data), dIn.Addr)
 	}
 
 	return
@@ -145,20 +143,26 @@ func (impl *serverImpl) procRoutine() {
 		case d := <-impl.server.ReadCh():
 			addr := d.Addr
 			d, err := impl.processReadData(d)
+
 			if err != nil {
 				impl.server.GetOb().OnException(addr, err)
+
 				continue
 			}
+
 			if d != nil {
 				impl.readCh <- d
 			}
 		case d := <-impl.writeCh:
 			addr := d.Addr
 			d, err := impl.processWriteData(d)
+
 			if err != nil {
 				impl.server.GetOb().OnException(addr, err)
+
 				continue
 			}
+
 			if d != nil {
 				impl.server.WriteCh() <- d
 			}
