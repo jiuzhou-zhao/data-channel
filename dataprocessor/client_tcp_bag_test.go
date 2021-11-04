@@ -13,6 +13,7 @@ func Test(t *testing.T) {
 	buf[0] = 0x10
 	buf[1] = 0x11
 	buf[2] = 0x12
+
 	t.Log(buf1, buf2)
 }
 

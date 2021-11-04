@@ -29,17 +29,22 @@ func (impl *clientTCPBagImpl) OnRead(dIn []byte) (dOut []byte, err error) {
 	}
 
 	var magic, l uint32
+
 	r := bytes.NewReader(impl.readBuffer)
 	err = binary.Read(r, binary.BigEndian, &magic)
+
 	if err != nil {
 		return
 	}
+
 	if magic != Magic {
 		err = ErrInvalidMagic
 
 		return
 	}
+
 	err = binary.Read(r, binary.BigEndian, &l)
+
 	if err != nil {
 		return
 	}
@@ -57,11 +62,14 @@ func (impl *clientTCPBagImpl) OnRead(dIn []byte) (dOut []byte, err error) {
 func (impl *clientTCPBagImpl) OnWrite(dIn []byte) (dOut []byte, err error) {
 	buf := &bytes.Buffer{}
 	err = binary.Write(buf, binary.BigEndian, Magic)
+
 	if err != nil {
 		return
 	}
+
 	l := uint32(len(dIn))
 	err = binary.Write(buf, binary.BigEndian, l)
+
 	if err != nil {
 		return
 	}

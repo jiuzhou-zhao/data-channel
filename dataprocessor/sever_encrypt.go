@@ -23,10 +23,12 @@ func (impl *serverAesDataProcessorImpl) OnRead(dIn *inter.ServerData) (dOut *int
 	if err != nil || d == nil {
 		return
 	}
+
 	dOut = &inter.ServerData{
 		Addr: dIn.Addr,
 		Data: d,
 	}
+
 	return
 }
 
@@ -35,9 +37,11 @@ func (impl *serverAesDataProcessorImpl) OnWrite(dIn *inter.ServerData) (dOut *in
 	if err != nil || d == nil {
 		return
 	}
+
 	dOut = &inter.ServerData{
 		Addr: dIn.Addr,
 		Data: d,
 	}
+
 	return
 }

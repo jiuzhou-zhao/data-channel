@@ -20,16 +20,20 @@ func (impl *serverTCPBagImpl) mustCli(addr string) inter.ClientDataProcessor {
 	if dp, ok := impl.cliMap[addr]; ok {
 		return dp
 	}
+
 	impl.cliMap[addr] = NewClientTCPBag()
+
 	return impl.cliMap[addr]
 }
 
 func (impl *serverTCPBagImpl) OnRead(dIn *inter.ServerData) (dOut *inter.ServerData, err error) {
 	dp := impl.mustCli(dIn.Addr)
 	d, err := dp.OnRead(dIn.Data)
+
 	if err != nil {
 		return
 	}
+
 	if d == nil {
 		return
 	}
@@ -45,9 +49,11 @@ func (impl *serverTCPBagImpl) OnRead(dIn *inter.ServerData) (dOut *inter.ServerD
 func (impl *serverTCPBagImpl) OnWrite(dIn *inter.ServerData) (dOut *inter.ServerData, err error) {
 	dp := impl.mustCli(dIn.Addr)
 	d, err := dp.OnWrite(dIn.Data)
+
 	if err != nil {
 		return
 	}
+
 	if d == nil {
 		return
 	}

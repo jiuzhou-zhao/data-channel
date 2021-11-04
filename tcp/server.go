@@ -48,6 +48,7 @@ func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusO
 	}
 
 	impl.wg.Add(1)
+
 	go impl.procRoutine()
 
 	svr = impl
@@ -82,6 +83,7 @@ func (impl *serverImpl) SetOb(ob inter.ServerStatusOb) {
 	if ob == nil {
 		ob = &inter.UnimplementedServerStatusOb{}
 	}
+
 	impl.statusOb = ob
 }
 
@@ -112,9 +114,11 @@ func (impl *serverImpl) procRoutine() {
 
 	log := impl.log.WithFields(logger.FieldString("role", "tcp_server_proc"))
 	log.Info("enter")
+
 	defer log.Info("leave")
 
 	impl.wg.Add(1)
+
 	go impl.acceptRoutine()
 
 	defer func() {
@@ -128,6 +132,7 @@ func (impl *serverImpl) procRoutine() {
 		select {
 		case <-impl.ctx.Done():
 			loop = false
+
 			log.Info("try exit")
 
 			continue
@@ -136,6 +141,7 @@ func (impl *serverImpl) procRoutine() {
 			impl.cliMap[cli.RemoteAddr().String()] = cli
 
 			impl.wg.Add(1)
+
 			go impl.readRoutine(cli)
 		case cli := <-impl.closeCh:
 			log.Infof("close client: %s", cli.RemoteAddr().String())
@@ -148,8 +154,10 @@ func (impl *serverImpl) procRoutine() {
 				if err != nil {
 					impl.statusOb.OnException(d.Addr, err)
 					log.Errorf("cli[%s] write failed: %v", d.Addr, err)
+
 					_ = cli.Close()
 				}
+
 				if n != len(d.Data) {
 					log.Errorf("cli[%s] write: %n/%d", d.Addr, n, len(d.Data))
 				}
@@ -165,6 +173,7 @@ func (impl *serverImpl) acceptRoutine() {
 
 	log := impl.log.WithFields(logger.FieldString("role", "tcp_server_proc_accept"))
 	log.Info("enter")
+
 	defer log.Info("leave")
 
 	loop := true
@@ -172,6 +181,7 @@ func (impl *serverImpl) acceptRoutine() {
 		select {
 		case <-impl.ctx.Done():
 			loop = false
+
 			log.Info("try exit")
 
 			continue
@@ -181,6 +191,7 @@ func (impl *serverImpl) acceptRoutine() {
 		cli, err := impl.listener.Accept()
 		if err != nil {
 			impl.statusOb.OnException("", err)
+
 			continue
 		}
 
@@ -194,6 +205,7 @@ func (impl *serverImpl) readRoutine(conn net.Conn) {
 	log := impl.log.WithFields(logger.FieldString("role", "tcp_server_proc_reader"),
 		logger.FieldString("addr", conn.RemoteAddr().String()))
 	log.Info("enter")
+
 	defer log.Info("leave")
 
 	addr := conn.RemoteAddr().String()
@@ -206,6 +218,7 @@ func (impl *serverImpl) readRoutine(conn net.Conn) {
 		select {
 		case <-impl.ctx.Done():
 			loop = false
+
 			log.Info("try exit")
 
 			continue
@@ -214,8 +227,10 @@ func (impl *serverImpl) readRoutine(conn net.Conn) {
 
 		buf := make([]byte, frameSize)
 		n, err := conn.Read(buf)
+
 		if err != nil {
 			impl.statusOb.OnException(addr, err)
+
 			break
 		}
 		impl.readCh <- &inter.ServerData{

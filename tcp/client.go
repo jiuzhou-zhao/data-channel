@@ -44,6 +44,7 @@ func NewClient(ctx context.Context, address string, statusOb inter.ClientStatusO
 	}
 
 	impl.wg.Add(1)
+
 	go impl.procRoutine()
 
 	cli = impl
@@ -79,6 +80,7 @@ func (impl *clientImpl) SetOb(ob inter.ClientStatusOb) {
 	if ob == nil {
 		ob = &inter.UnimplementedClientStatusOb{}
 	}
+
 	impl.statusOb = ob
 }
 
@@ -118,9 +120,11 @@ func (impl *clientImpl) procRoutine() {
 
 	log := impl.log.WithFields(logger.FieldString("role", "tcp_client_proc"))
 	log.Info("enter")
+
 	defer log.Info("leave")
 
 	impl.wg.Add(1)
+
 	go impl.readRoutine()
 
 	loop := true
@@ -139,11 +143,13 @@ func (impl *clientImpl) procRoutine() {
 	}
 
 	dialInterval := time.Millisecond
+
 	for loop {
 		if !impl.connOpened {
 			select {
 			case <-impl.ctx.Done():
 				loop = false
+
 				log.Info("try exit")
 
 				continue
@@ -153,16 +159,20 @@ func (impl *clientImpl) procRoutine() {
 			conn, err := impl.dial()
 			if err != nil {
 				impl.statusOb.OnException(err)
+
 				dialInterval *= 2
+
 				if dialInterval >= time.Minute {
 					dialInterval = time.Minute
 				}
+
 				log.Infof("dial error: %v", err)
 
 				continue
 			}
 
 			log.Info("dial success")
+
 			impl.conn = conn
 			impl.connOpened = true
 			dialInterval = time.Millisecond
@@ -173,6 +183,7 @@ func (impl *clientImpl) procRoutine() {
 		select {
 		case <-impl.ctx.Done():
 			loop = false
+
 			log.Info("try exit")
 
 			continue
@@ -205,6 +216,7 @@ func (impl *clientImpl) readRoutine() {
 
 	log := impl.log.WithFields(logger.FieldString("role", "tcp_client_proc_read"))
 	log.Info("enter")
+
 	defer log.Info("leave")
 
 	loop := true
@@ -212,6 +224,7 @@ func (impl *clientImpl) readRoutine() {
 		select {
 		case <-impl.ctx.Done():
 			loop = false
+
 			log.Info("try exit")
 
 			continue
@@ -223,11 +236,13 @@ func (impl *clientImpl) readRoutine() {
 			select {
 			case <-impl.ctx.Done():
 				loop = false
+
 				log.Info("try exit")
 
 				continue
 			default:
 			}
+
 			buf := make([]byte, frameSize)
 			n, e := impl.conn.Read(buf)
 
