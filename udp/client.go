@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/jiuzhou-zhao/data-channel/inter"
-	"github.com/sgostarter/i/logger"
+	"github.com/sgostarter/i/l"
 )
 
 const (
@@ -19,13 +19,13 @@ var (
 	ErrWriteBroken = errors.New("writeBroken")
 )
 
-func NewClient(ctx context.Context, address string, statusOb inter.ClientStatusOb, log logger.Wrapper) (inter.Client, error) {
+func NewClient(ctx context.Context, address string, statusOb inter.ClientStatusOb, log l.Wrapper) (inter.Client, error) {
 	if statusOb == nil {
 		statusOb = &inter.UnimplementedClientStatusOb{}
 	}
 
 	if log == nil {
-		log = logger.NewWrapper(&logger.NopLogger{}).WithFields(logger.FieldString("role", "udp_client"))
+		log = l.NewNopLoggerWrapper()
 	}
 
 	conn, err := net.Dial("udp", address)
@@ -39,7 +39,7 @@ func NewClient(ctx context.Context, address string, statusOb inter.ClientStatusO
 		ctx:       ctx,
 		ctxCancel: cancel,
 		statusOb:  statusOb,
-		log:       log,
+		log:       log.WithFields(l.StringField(l.ClsKey, "udp-client")),
 		conn:      conn,
 		readCh:    make(chan []byte, clientBufferCount),
 		writeCh:   make(chan []byte, clientBufferCount),
@@ -59,7 +59,7 @@ type clientImpl struct {
 	ctxCancel context.CancelFunc
 
 	statusOb inter.ClientStatusOb
-	log      logger.Wrapper
+	log      l.Wrapper
 
 	conn net.Conn
 
@@ -104,7 +104,7 @@ func (impl *clientImpl) CloseAndWait() {
 func (impl *clientImpl) procRoutine() {
 	defer impl.wg.Done()
 
-	log := impl.log.WithFields(logger.FieldString("role", "udp_client_proc"))
+	log := impl.log.WithFields(l.StringField(l.ClsModuleKey, "main_routine"))
 
 	impl.statusOb.OnConnect()
 
@@ -142,7 +142,7 @@ func (impl *clientImpl) procRoutine() {
 func (impl *clientImpl) readRoutine() {
 	defer impl.wg.Done()
 
-	log := impl.log.WithFields(logger.FieldString("role", "udp_client_proc_read"))
+	log := impl.log.WithFields(l.StringField(l.ClsModuleKey, "read_routine"))
 
 	loop := true
 	for loop {

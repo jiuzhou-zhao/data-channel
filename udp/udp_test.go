@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jiuzhou-zhao/data-channel/inter"
-	"github.com/sgostarter/i/logger"
+	"github.com/sgostarter/i/l"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,7 +54,7 @@ func TestUDP(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	log := logger.NewWrapper(logger.NewCommLogger(&logger.FmtRecorder{}))
+	log := l.NewWrapper(l.NewCommLogger(&l.FmtRecorder{}))
 
 	s, err := NewServer(ctx, "127.0.0.1:11111", &serverStatusOb{}, log)
 	assert.Nil(t, err)

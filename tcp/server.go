@@ -6,20 +6,20 @@ import (
 	"sync"
 
 	"github.com/jiuzhou-zhao/data-channel/inter"
-	"github.com/sgostarter/i/logger"
+	"github.com/sgostarter/i/l"
 )
 
 const (
 	serverBufferCount = 10
 )
 
-func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusOb, log logger.Wrapper) (svr inter.Server, err error) {
+func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusOb, log l.Wrapper) (svr inter.Server, err error) {
 	if statusOb == nil {
 		statusOb = &inter.UnimplementedServerStatusOb{}
 	}
 
 	if log == nil {
-		log = logger.NewWrapper(&logger.NopLogger{}).WithFields(logger.FieldString("role", "tcp_server"))
+		log = l.NewNopLoggerWrapper()
 	}
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", address)
@@ -38,7 +38,7 @@ func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusO
 		ctx:       ctx,
 		ctxCancel: cancel,
 		statusOb:  statusOb,
-		log:       log,
+		log:       log.WithFields(l.StringField(l.ClsKey, "tcp-server")),
 		listener:  conn,
 		readCh:    make(chan *inter.ServerData, serverBufferCount),
 		writeCh:   make(chan *inter.ServerData, serverBufferCount),
@@ -63,7 +63,7 @@ type serverImpl struct {
 	ctxCancel context.CancelFunc
 
 	statusOb inter.ServerStatusOb
-	log      logger.Wrapper
+	log      l.Wrapper
 
 	listener *net.TCPListener
 
@@ -112,7 +112,7 @@ func (impl *serverImpl) CloseAndWait() {
 func (impl *serverImpl) procRoutine() {
 	defer impl.wg.Done()
 
-	log := impl.log.WithFields(logger.FieldString("role", "tcp_server_proc"))
+	log := impl.log.WithFields(l.StringField(l.ClsModuleKey, "main_routine"))
 	log.Info("enter")
 
 	defer log.Info("leave")
@@ -171,7 +171,7 @@ func (impl *serverImpl) procRoutine() {
 func (impl *serverImpl) acceptRoutine() {
 	defer impl.wg.Done()
 
-	log := impl.log.WithFields(logger.FieldString("role", "tcp_server_proc_accept"))
+	log := impl.log.WithFields(l.StringField(l.ClsModuleKey, "accept_routine"))
 	log.Info("enter")
 
 	defer log.Info("leave")
@@ -202,8 +202,8 @@ func (impl *serverImpl) acceptRoutine() {
 func (impl *serverImpl) readRoutine(conn net.Conn) {
 	defer impl.wg.Done()
 
-	log := impl.log.WithFields(logger.FieldString("role", "tcp_server_proc_reader"),
-		logger.FieldString("addr", conn.RemoteAddr().String()))
+	log := impl.log.WithFields(l.StringField(l.ClsModuleKey, "read_routine"),
+		l.FieldString("addr", conn.RemoteAddr().String()))
 	log.Info("enter")
 
 	defer log.Info("leave")

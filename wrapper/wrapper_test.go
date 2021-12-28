@@ -12,7 +12,7 @@ import (
 	"github.com/jiuzhou-zhao/data-channel/inter"
 	"github.com/jiuzhou-zhao/data-channel/tcp"
 	"github.com/jiuzhou-zhao/data-channel/udp"
-	"github.com/sgostarter/i/logger"
+	"github.com/sgostarter/i/l"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -57,7 +57,7 @@ func TestUDPWrapper(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	log := logger.NewWrapper(logger.NewCommLogger(&logger.FmtRecorder{}))
+	log := l.NewWrapper(l.NewCommLogger(&l.FmtRecorder{}))
 
 	rs, err := udp.NewServer(ctx, "127.0.0.1:11111", &serverStatusOb{}, log)
 	assert.Nil(t, err)
@@ -131,7 +131,7 @@ func TestTCPWrapper(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	log := logger.NewWrapper(logger.NewCommLogger(&logger.FmtRecorder{}))
+	log := l.NewWrapper(l.NewCommLogger(&l.FmtRecorder{}))
 
 	rs, err := tcp.NewServer(ctx, "127.0.0.1:11111", &serverStatusOb{}, log)
 	assert.Nil(t, err)

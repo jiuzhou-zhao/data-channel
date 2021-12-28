@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/jiuzhou-zhao/data-channel/inter"
-	"github.com/sgostarter/i/logger"
+	"github.com/sgostarter/i/l"
 )
 
 var ErrWriteBroken = errors.New("writeBroken")
@@ -18,13 +18,13 @@ const (
 	frameSize         = 65507
 )
 
-func NewClient(ctx context.Context, address string, statusOb inter.ClientStatusOb, log logger.Wrapper) (cli inter.Client, err error) {
+func NewClient(ctx context.Context, address string, statusOb inter.ClientStatusOb, log l.Wrapper) (cli inter.Client, err error) {
 	if statusOb == nil {
 		statusOb = &inter.UnimplementedClientStatusOb{}
 	}
 
 	if log == nil {
-		log = logger.NewWrapper(&logger.NopLogger{}).WithFields(logger.FieldString("role", "tcp_client"))
+		log = l.NewNopLoggerWrapper()
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -34,7 +34,7 @@ func NewClient(ctx context.Context, address string, statusOb inter.ClientStatusO
 		ctxCancel:   cancel,
 		address:     address,
 		statusOb:    statusOb,
-		log:         log,
+		log:         log.WithFields(l.StringField(l.ClsKey, "tcp-client")),
 		connOpened:  false,
 		conn:        nil,
 		readCh:      make(chan []byte, clientBufferCount),
@@ -61,7 +61,7 @@ type clientImpl struct {
 	address string
 
 	statusOb inter.ClientStatusOb
-	log      logger.Wrapper
+	log      l.Wrapper
 
 	readCh      chan []byte
 	writeCh     chan []byte
@@ -118,7 +118,7 @@ func (impl *clientImpl) dial() (conn *net.TCPConn, err error) {
 func (impl *clientImpl) procRoutine() {
 	defer impl.wg.Done()
 
-	log := impl.log.WithFields(logger.FieldString("role", "tcp_client_proc"))
+	log := impl.log.WithFields(l.StringField(l.ClsModuleKey, "main_routine"))
 	log.Info("enter")
 
 	defer log.Info("leave")
@@ -214,7 +214,7 @@ func (impl *clientImpl) procRoutine() {
 func (impl *clientImpl) readRoutine() {
 	defer impl.wg.Done()
 
-	log := impl.log.WithFields(logger.FieldString("role", "tcp_client_proc_read"))
+	log := impl.log.WithFields(l.StringField(l.ClsModuleKey, "read_routine"))
 	log.Info("enter")
 
 	defer log.Info("leave")

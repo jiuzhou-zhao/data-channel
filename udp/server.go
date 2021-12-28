@@ -6,20 +6,20 @@ import (
 	"sync"
 
 	"github.com/jiuzhou-zhao/data-channel/inter"
-	"github.com/sgostarter/i/logger"
+	"github.com/sgostarter/i/l"
 )
 
 const (
 	serverBufferCount = 10
 )
 
-func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusOb, log logger.Wrapper) (inter.Server, error) {
+func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusOb, log l.Wrapper) (inter.Server, error) {
 	if statusOb == nil {
 		statusOb = &inter.UnimplementedServerStatusOb{}
 	}
 
 	if log == nil {
-		log = logger.NewWrapper(&logger.NopLogger{}).WithFields(logger.FieldString("role", "udp_server"))
+		log = l.NewNopLoggerWrapper()
 	}
 
 	lAddr, err := net.ResolveUDPAddr("udp", address)
@@ -38,7 +38,7 @@ func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusO
 		ctx:            ctx,
 		ctxCancel:      cancel,
 		statusOb:       statusOb,
-		log:            log,
+		log:            log.WithFields(l.StringField(l.ClsKey, "udp-server")),
 		conn:           conn,
 		readCh:         make(chan *inter.ServerData, serverBufferCount),
 		writeCh:        make(chan *inter.ServerData, serverBufferCount),
@@ -65,7 +65,7 @@ type serverImpl struct {
 	ctxCancel context.CancelFunc
 
 	statusOb inter.ServerStatusOb
-	log      logger.Wrapper
+	log      l.Wrapper
 
 	conn *net.UDPConn
 
@@ -112,7 +112,7 @@ func (impl *serverImpl) CloseAndWait() {
 func (impl *serverImpl) procRoutine() {
 	defer impl.wg.Done()
 
-	log := impl.log.WithFields(logger.FieldString("role", "udp_server_proc"))
+	log := impl.log.WithFields(l.StringField(l.ClsModuleKey, "main_routine"))
 
 	impl.wg.Add(1)
 
@@ -154,7 +154,7 @@ func (impl *serverImpl) procRoutine() {
 func (impl *serverImpl) readRoutine() {
 	defer impl.wg.Done()
 
-	log := impl.log.WithFields(logger.FieldString("role", "udp_server_proc_read"))
+	log := impl.log.WithFields(l.StringField(l.ClsModuleKey, "read_routine"))
 
 	loop := true
 	for loop {

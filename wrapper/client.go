@@ -5,17 +5,17 @@ import (
 	"sync"
 
 	"github.com/jiuzhou-zhao/data-channel/inter"
-	"github.com/sgostarter/i/logger"
+	"github.com/sgostarter/i/l"
 )
 
-func NewClient(client inter.Client, log logger.Wrapper, processors ...inter.ClientDataProcessor) inter.Client {
+func NewClient(client inter.Client, log l.Wrapper, processors ...inter.ClientDataProcessor) inter.Client {
 	if log == nil {
-		log = logger.NewWrapper(&logger.NopLogger{}).WithFields(logger.FieldString("role", "udp_server"))
+		log = l.NewNopLoggerWrapper()
 	}
 
 	impl := &clientImpl{
 		client:     client,
-		log:        log,
+		log:        log.WithFields(l.StringField(l.ClsKey, "client_wrapper")),
 		processors: processors,
 		readCh:     make(chan []byte, 10),
 		writeCh:    make(chan []byte, 10),
@@ -33,7 +33,7 @@ type clientImpl struct {
 
 	client     inter.Client
 	processors []inter.ClientDataProcessor
-	log        logger.Wrapper
+	log        l.Wrapper
 
 	readCh  chan []byte
 	writeCh chan []byte
