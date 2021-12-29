@@ -173,6 +173,7 @@ func (impl *clientImpl) procRoutine() {
 
 			log.Info("dial success")
 
+			_ = conn.SetNoDelay(false)
 			impl.conn = conn
 			impl.connOpened = true
 			dialInterval = time.Millisecond

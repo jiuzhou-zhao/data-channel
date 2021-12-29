@@ -195,6 +195,8 @@ func (impl *serverImpl) acceptRoutine() {
 			continue
 		}
 
+		_ = cli.(*net.TCPConn).SetNoDelay(false)
+
 		impl.acceptCh <- cli
 	}
 }
