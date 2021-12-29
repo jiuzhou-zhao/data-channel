@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package channelpb;
+
+option go_package = "github.com/jiuzhou-zhao/data-channel/grpc/channelpb;channelpb";
+
+message D {
+  bytes datas = 1;
+}
+
+service Channel {
+  rpc Data(stream D) returns (stream D) {}
+}
