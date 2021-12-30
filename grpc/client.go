@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/jiuzhou-zhao/data-channel/grpc/channelpb"
 	"github.com/jiuzhou-zhao/data-channel/inter"
@@ -140,7 +141,8 @@ func (impl *cliImpl) connectRoutine() {
 
 		stream, err := grpcCli.Data(impl.ctx)
 		if err != nil {
-			logger.WithFields(l.ErrorField(err)).Error("dail")
+			logger.WithFields(l.ErrorField(err)).Error("dial")
+			time.Sleep(time.Second * 2)
 
 			continue
 		}
