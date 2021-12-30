@@ -78,9 +78,14 @@ func (impl *cliImpl) init(address string) (err error) {
 }
 
 func (impl *cliImpl) mainRoutine() {
+	logger := impl.logger.WithFields(l.StringField(l.ClsModuleKey, "main-routine"))
+	logger.Info("enter")
+
 	defer func() {
 		impl.wg.Done()
 		_ = impl.conn.Close()
+
+		logger.Info("leave")
 	}()
 
 	loop := true
@@ -113,7 +118,13 @@ func (impl *cliImpl) mainRoutine() {
 }
 
 func (impl *cliImpl) connectRoutine() {
-	defer impl.wg.Done()
+	logger := impl.logger.WithFields(l.StringField(l.ClsModuleKey, "connect-routine"))
+	logger.Info("enter")
+
+	defer func() {
+		impl.wg.Done()
+		logger.Info("leave")
+	}()
 
 	loop := true
 	for loop {
@@ -129,6 +140,8 @@ func (impl *cliImpl) connectRoutine() {
 
 		stream, err := grpcCli.Data(impl.ctx)
 		if err != nil {
+			logger.WithFields(l.ErrorField(err)).Error("dail")
+
 			continue
 		}
 
@@ -137,6 +150,8 @@ func (impl *cliImpl) connectRoutine() {
 		for {
 			d, errI := stream.Recv()
 			if errI != nil {
+				logger.WithFields(l.ErrorField(err)).Error("receive")
+
 				break
 			}
 			impl.readCh <- d.Datas
