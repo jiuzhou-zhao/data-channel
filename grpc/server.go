@@ -19,12 +19,20 @@ const (
 )
 
 func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusOb, logger l.Wrapper) (inter.Server, error) {
+	return NewServerEx(ctx, address, statusOb, logger, serverBufferCount)
+}
+
+func NewServerEx(ctx context.Context, address string, statusOb inter.ServerStatusOb, logger l.Wrapper, channelBufferSize int) (inter.Server, error) {
 	if statusOb == nil {
 		statusOb = &inter.UnimplementedServerStatusOb{}
 	}
 
 	if logger == nil {
 		logger = l.NewNopLoggerWrapper()
+	}
+
+	if channelBufferSize <= 0 {
+		channelBufferSize = serverBufferCount
 	}
 
 	listen, err := net.Listen("tcp", address)
@@ -36,10 +44,10 @@ func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusO
 		ctx:             ctx,
 		statusOb:        statusOb,
 		logger:          logger.WithFields(l.StringField(l.ClsKey, "grpc-server")),
-		readCh:          make(chan *inter.ServerData, serverBufferCount),
-		writeCh:         make(chan *inter.ServerData, serverBufferCount),
-		cliConnectCh:    make(chan *cliConn, serverBufferCount),
-		cliDisconnectCh: make(chan *cliConn, serverBufferCount),
+		readCh:          make(chan *inter.ServerData, channelBufferSize),
+		writeCh:         make(chan *inter.ServerData, channelBufferSize),
+		cliConnectCh:    make(chan *cliConn, channelBufferSize),
+		cliDisconnectCh: make(chan *cliConn, channelBufferSize),
 	}
 
 	server.start(listen)

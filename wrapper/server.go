@@ -8,8 +8,18 @@ import (
 	"github.com/sgostarter/i/l"
 )
 
+const DefaultChannelBufferSize = 1000
+
 func NewServer(server inter.Server, log l.Wrapper, processors ...inter.ServerDataProcessor) inter.Server {
+	return NewServerEx(server, DefaultChannelBufferSize, log, processors...)
+}
+
+func NewServerEx(server inter.Server, channelBufferSize int, log l.Wrapper, processors ...inter.ServerDataProcessor) inter.Server {
 	ob := server.GetOb()
+
+	if channelBufferSize <= 0 {
+		channelBufferSize = DefaultChannelBufferSize
+	}
 
 	if log == nil {
 		log = l.NewNopLoggerWrapper()
@@ -20,9 +30,9 @@ func NewServer(server inter.Server, log l.Wrapper, processors ...inter.ServerDat
 		ob:         ob,
 		log:        log.WithFields(l.StringField(l.ClsModuleKey, "server-wrapper")),
 		processors: processors,
-		readCh:     make(chan *inter.ServerData, 10),
-		writeCh:    make(chan *inter.ServerData, 10),
-		closeCh:    make(chan string, 10),
+		readCh:     make(chan *inter.ServerData, channelBufferSize),
+		writeCh:    make(chan *inter.ServerData, channelBufferSize),
+		closeCh:    make(chan string, channelBufferSize),
 	}
 
 	server.SetOb(impl)

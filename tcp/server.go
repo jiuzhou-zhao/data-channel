@@ -10,16 +10,24 @@ import (
 )
 
 const (
-	serverBufferCount = 10
+	serverBufferCount = 1000
 )
 
 func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusOb, log l.Wrapper) (svr inter.Server, err error) {
+	return NewServerEx(ctx, address, statusOb, log, serverBufferCount)
+}
+
+func NewServerEx(ctx context.Context, address string, statusOb inter.ServerStatusOb, log l.Wrapper, channelBufferSize int) (svr inter.Server, err error) {
 	if statusOb == nil {
 		statusOb = &inter.UnimplementedServerStatusOb{}
 	}
 
 	if log == nil {
 		log = l.NewNopLoggerWrapper()
+	}
+
+	if channelBufferSize <= 0 {
+		channelBufferSize = serverBufferCount
 	}
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", address)
@@ -40,10 +48,10 @@ func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusO
 		statusOb:  statusOb,
 		log:       log.WithFields(l.StringField(l.ClsKey, "tcp-server")),
 		listener:  conn,
-		readCh:    make(chan *inter.ServerData, serverBufferCount),
-		writeCh:   make(chan *inter.ServerData, serverBufferCount),
-		acceptCh:  make(chan net.Conn, serverBufferCount),
-		closeCh:   make(chan net.Conn, serverBufferCount),
+		readCh:    make(chan *inter.ServerData, channelBufferSize),
+		writeCh:   make(chan *inter.ServerData, channelBufferSize),
+		acceptCh:  make(chan net.Conn, channelBufferSize),
+		closeCh:   make(chan net.Conn, channelBufferSize),
 		cliMap:    make(map[string]net.Conn),
 	}
 

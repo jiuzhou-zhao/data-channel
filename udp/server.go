@@ -10,16 +10,24 @@ import (
 )
 
 const (
-	serverBufferCount = 10
+	serverBufferCount = 1000
 )
 
 func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusOb, log l.Wrapper) (inter.Server, error) {
+	return NewServerEx(ctx, address, statusOb, log, serverBufferCount)
+}
+
+func NewServerEx(ctx context.Context, address string, statusOb inter.ServerStatusOb, log l.Wrapper, channelBufferSize int) (inter.Server, error) {
 	if statusOb == nil {
 		statusOb = &inter.UnimplementedServerStatusOb{}
 	}
 
 	if log == nil {
 		log = l.NewNopLoggerWrapper()
+	}
+
+	if channelBufferSize <= 0 {
+		channelBufferSize = serverBufferCount
 	}
 
 	lAddr, err := net.ResolveUDPAddr("udp", address)
@@ -40,9 +48,9 @@ func NewServer(ctx context.Context, address string, statusOb inter.ServerStatusO
 		statusOb:       statusOb,
 		log:            log.WithFields(l.StringField(l.ClsKey, "udp-server")),
 		conn:           conn,
-		readCh:         make(chan *inter.ServerData, serverBufferCount),
-		writeCh:        make(chan *inter.ServerData, serverBufferCount),
-		readChInternal: make(chan *dataInternal, serverBufferCount),
+		readCh:         make(chan *inter.ServerData, channelBufferSize),
+		writeCh:        make(chan *inter.ServerData, channelBufferSize),
+		readChInternal: make(chan *dataInternal, channelBufferSize),
 		cliMap:         make(map[string]net.UDPAddr),
 	}
 
