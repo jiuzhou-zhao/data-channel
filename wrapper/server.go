@@ -29,7 +29,11 @@ func NewServer(server inter.Server, log l.Wrapper, processors ...inter.ServerDat
 
 	impl.wg.Add(1)
 
-	go impl.procRoutine()
+	go impl.writeCloseRoutine()
+
+	impl.wg.Add(1)
+
+	go impl.readRoutine()
 
 	return impl
 }
@@ -126,7 +130,7 @@ func (impl *serverImpl) processWriteData(dIn *inter.ServerData) (dOut *inter.Ser
 	return
 }
 
-func (impl *serverImpl) procRoutine() {
+func (impl *serverImpl) readRoutine() {
 	defer impl.wg.Done()
 
 	loop := true
@@ -136,10 +140,6 @@ func (impl *serverImpl) procRoutine() {
 			loop = false
 
 			continue
-		case addr := <-impl.closeCh:
-			for _, processor := range impl.processors {
-				processor.OnTerminate(addr)
-			}
 		case d := <-impl.server.ReadCh():
 			addr := d.Addr
 			d, err := impl.processReadData(d)
@@ -152,6 +152,24 @@ func (impl *serverImpl) procRoutine() {
 
 			if d != nil {
 				impl.readCh <- d
+			}
+		}
+	}
+}
+
+func (impl *serverImpl) writeCloseRoutine() {
+	defer impl.wg.Done()
+
+	loop := true
+	for loop {
+		select {
+		case <-impl.server.Context().Done():
+			loop = false
+
+			continue
+		case addr := <-impl.closeCh:
+			for _, processor := range impl.processors {
+				processor.OnTerminate(addr)
 			}
 		case d := <-impl.writeCh:
 			addr := d.Addr
